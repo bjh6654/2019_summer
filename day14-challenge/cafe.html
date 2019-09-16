@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"/>
+  <head>
+    <meta charset="utf-8">
+    <title>Boost Cafe</title>
+  </head>
+  <body>
+    <h2>Boost Cafe</h2>
+      바리스타 인원 : <input type="number" id="barista"> <button onclick="setting()">설정</button>
+    <div id="checkBarista">
+    </div>
+    <h4>Cafe Menu</h4>
+    아메리카노 주문 : <input type="number" id="americano"><br/>
+    라떼 주문 : <input type="number" id="latte"><br/>
+    프라프치노 주문 : <input type="number" id="frappuccino"><br/>
+    <button onclick="runCafe()">주문</button>
+  </body>
+</html>
+
+<script type="text/javascript">
+  /*
+    매니저의 동작
+    매니저는 사용자로 부터 OrderQueue를 입력받고
+    Task를 바리스타에게 뿌린후 큐가 비었음이 확인되면 사용자에게 메세지를 보낸다. ( = 종료 )
+  */
+  resultCount.count = 0;
+  function resultCount() {
+    return ++resultCount.count;
+  }
+
+  this.manager = new Worker('./manager.js');
+  this.manager.onmessage = (e) => {
+    printDiv(`${getTime()}`);
+    printDiv(e.data);
+    if ( resultCount() == this.orderqueue.length )
+      printDiv("모든 주문이 완료되었습니다.");
+  }
+  this.worker = [];
+
+  const getTime = () => `${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
+
+  function setting() {
+    const layout = document.getElementById('checkBarista');
+    this.B_count = document.getElementById('barista').value;
+    layout.removeChild(layout.firstChild);
+    printDiv(`오늘 출근한 바리스타는 ${B_count}명 입니다.`, document.getElementById('checkBarista'), 'red');
+  }
+
+  function Order(ame, lat, fra) {
+    let que = [];
+    while( ame-- > 0 )  que.push('아메리카노');
+    while( lat-- > 0 )  que.push('라떼');
+    while( fra-- > 0 )  que.push('프라프치노');
+    return que;
+  }
+
+  function printDiv(message, loc = document.body, color = "black") {
+    let div = document.createElement('div');
+    div.style.color = color;
+    div.textContent = message;
+    loc.appendChild(div);
+  }
+
+  function runCafe() {
+    const americano = document.getElementById('americano').value;
+    const [ ame, lat, fra ] = [ document.getElementById('americano').value,
+                                document.getElementById('latte').value,
+                                document.getElementById('frappuccino').value ];
+    this.orderqueue = Order(ame,lat,fra);
+    this.manager.postMessage({
+      order : orderqueue,
+      count : this.B_count
+    });
+  }
+</script>
